@@ -1,0 +1,108 @@
+networks:
+  hadoop-net:
+    driver: bridge
+
+services:
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenod2
+    hostname: namenode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      - CLUSTER_NAME=bigdata-cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=1
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    hostname: datanode1
+    ports:
+      - "9864:9864"
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=1
+    depends_on:
+      - namenode
+    volumes:
+      - datanode_data:/hadoop/dfs/data
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    hostname: resourcemanager
+    ports:
+      - "8088:8088"
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    depends_on:
+      - namenode
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  nodemanager:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager1
+    hostname: nodemanager1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    depends_on:
+      - namenode
+      - resourcemanager
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  hiveserver:
+    image: apache/hive:3.1.3
+    container_name: hiveserver
+    hostname: hiveserver
+    depends_on:
+      - namenode
+      - resourcemanager
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    environment:
+      - SERVICE_NAME=hiveserver2
+      - IS_RESUME=true
+    volumes:
+      - ./hive/hive-site.xml:/opt/hive/conf/hive-site.xml
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  redis-master:
+    image: redis:7-alpine
+    container_name: redis-master2
+    hostname: redis-master
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass redis2024
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_master_data:/data
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+volumes:
+  namenode_data:
+  datanode_data:
+  redis_master_data:
