@@ -1,0 +1,170 @@
+networks:
+  hadoop-net:
+    driver: bridge
+
+services:
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenod2
+    hostname: namenode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      - CLUSTER_NAME=bigdata
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=1
+      - HDFS_CONF_dfs_permissions_enabled=false
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    hostname: datanode1
+    ports:
+      - "9864:9864"
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=1
+      - HDFS_CONF_dfs_permissions_enabled=false
+      - SERVICE_PRECONDITION=namenode:9870
+    volumes:
+      - datanode_data:/hadoop/dfs/data
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    hostname: resourcemanager
+    ports:
+      - "8088:8088"
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - SERVICE_PRECONDITION=namenode:9870 datanode1:9864
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  nodemanager:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager1
+    hostname: nodemanager1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - SERVICE_PRECONDITION=namenode:9870 datanode1:9864 resourcemanager:8088
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  hive-metastore-db:
+    image: postgres:12-alpine
+    container_name: hive-metastore-db
+    hostname: hive-metastore-db
+    environment:
+      - POSTGRES_DB=metastore
+      - POSTGRES_USER=hive
+      - POSTGRES_PASSWORD=hive
+    volumes:
+      - hive_metastore_db_data:/var/lib/postgresql/data
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive -d metastore"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  hive-db-init:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-db-init
+    depends_on:
+      hive-metastore-db:
+        condition: service_healthy
+    volumes:
+      - ./hive/hive-site.xml:/opt/hive/conf/hive-site.xml
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        /opt/hive/bin/schematool -dbType postgres -info
+        if [ $$? -eq 0 ]; then
+          echo "Schema already exists, skipping init"
+        else
+          echo "Initializing schema..."
+          /opt/hive/bin/schematool -dbType postgres -initSchema
+        fi
+    networks:
+      - hadoop-net
+    restart: "no"
+
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-metastore
+    hostname: hive-metastore
+    depends_on:
+      hive-metastore-db:
+        condition: service_healthy
+      hive-db-init:
+        condition: service_completed_successfully
+      namenode:
+        condition: service_started
+      datanode:
+        condition: service_started
+    volumes:
+      - ./hive/hive-site.xml:/opt/hive/conf/hive-site.xml
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870 datanode1:9864 hive-metastore-db:5432
+    command: /opt/hive/bin/hive --service metastore
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  hiveserver:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hiveserver
+    hostname: hiveserver
+    depends_on:
+      hive-metastore:
+        condition: service_started
+    volumes:
+      - ./hive/hive-site.xml:/opt/hive/conf/hive-site.xml
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    environment:
+      - SERVICE_PRECONDITION=hive-metastore:9083
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+  redis-master:
+    image: redis:7-alpine
+    container_name: redis-master2
+    hostname: redis-master
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass redis2024
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_master_data:/data
+    networks:
+      - hadoop-net
+    restart: unless-stopped
+
+volumes:
+  namenode_data:
+  datanode_data:
+  hive_metastore_db_data:
+  redis_master_data:
