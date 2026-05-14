@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Big Data Dashboard — Redis vs Hive</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <header>
+      <div class="header-left">
+        <div class="eyebrow">Cas Pratique Big Data</div>
+        <h1>Redis <em>vs</em> Hive</h1>
+        <div class="subtitle">Cluster Hadoop Multi-Nœuds — Transactions E-Commerce Mondiales — 10 GB</div>
+      </div>
+
+      <div class="loaders">
+        <div class="loader-box" id="box1">
+          <div class="loader-icon">📊</div>
+          <div class="loader-info">
+            <div class="loader-label">Benchmark</div>
+            <div class="loader-status" id="st1">Non chargé</div>
+          </div>
+          <label class="btn-load" for="f1">Charger</label>
+          <input type="file" id="f1" accept=".json">
+        </div>
+        <div class="loader-box" id="box2">
+          <div class="loader-icon">📈</div>
+          <div class="loader-info">
+            <div class="loader-label">Corrélation</div>
+            <div class="loader-status" id="st2">Non chargé</div>
+          </div>
+          <label class="btn-load" for="f2">Charger</label>
+          <input type="file" id="f2" accept=".json">
+        </div>
+        <!-- <button class="btn-demo" onclick="loadDemo()">⚡ Démo</button> -->
+      </div>
+    </header>
+
+    <div id="dashboard">
+
+      <div class="sec">Vue d'ensemble</div>
+      <div class="cards">
+        <div class="card c1">
+          <div class="card-label">Speedup Max</div>
+          <div class="card-val" id="cSpeedup">—</div>
+          <div class="card-sub">Redis vs Hive</div>
+        </div>
+        <div class="card c2">
+          <div class="card-label">Hive Temps Max</div>
+          <div class="card-val" id="cHive">—</div>
+          <div class="card-sub">secondes</div>
+        </div>
+        <div class="card c3">
+          <div class="card-label">Redis HIT Moy</div>
+          <div class="card-val" id="cRedis">—</div>
+          <div class="card-sub">millisecondes</div>
+        </div>
+        <div class="card c4">
+          <div class="card-label">Requêtes</div>
+          <div class="card-val" id="cNb">—</div>
+          <div class="card-sub">analytiques</div>
+        </div>
+        <div class="card c5">
+          <div class="card-label">Échantillon</div>
+          <div class="card-val" id="cSample">—</div>
+          <div class="card-sub">lignes analysées</div>
+        </div>
+      </div>
+
+      <div class="sec">Performance</div>
+      <div class="charts2">
+        <div class="chart-box">
+          <div class="chart-title">Temps d'exécution <span>// Hive(s) vs Redis(ms)</span></div>
+          <div class="chart-wrap"><canvas id="chTemps"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Facteur d'accélération <span>// Speedup x</span></div>
+          <div class="chart-wrap"><canvas id="chSpeedup"></canvas></div>
+        </div>
+      </div>
+
+      <div class="sec">Résultats détaillés</div>
+      <div class="tbl-box">
+        <div class="tbl-head"><span>Tableau comparatif des requêtes</span><small>n=3 runs Hive</small></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Requête</th>
+              <th>Hive moy (s)</th>
+              <th>Redis MISS (s)</th>
+              <th>Redis HIT (ms)</th>
+              <th>Speedup</th>
+            </tr>
+          </thead>
+          <tbody id="tBody"></tbody>
+        </table>
+      </div>
+
+    <footer>
+      <span>Cluster Hadoop Multi-Nœuds — Transactions E-Commerce Mondiales</span>
+      <span id="fDate"></span>
+    </footer>
+  </div>
+
+  <!-- Scripts modules -->
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
