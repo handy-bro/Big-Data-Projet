@@ -21,6 +21,7 @@ class DashboardRenderer {
     document.getElementById('fDate').textContent = new Date().toLocaleString('fr-FR');
 
     if (benchData) this.renderBench(benchData);
+    if (corrData) this.renderCorr(corrData);
   }
 
   /**
@@ -72,6 +73,58 @@ class DashboardRenderer {
   }
 
   /**
+   * Rendu des données de corrélation
+   */
+  renderCorr(c) {
+    const n = c.echantillon_taille;
+    document.getElementById('cSample').textContent = (n / 1000).toFixed(0) + 'K';
+
+    this.renderQualityStats(c.qualite, n);
+    this.renderDistributionNotes(c.distribution_notes);
+    this.renderDistributionStatuts(c.distribution_statuts);
+    this.renderPearsonMatrix(c.pearson);
+    this.renderSpearman(c.spearman);
+  }
+
+  /**
+   * Rendu des statistiques de qualité
+   */
+  renderQualityStats(qualite, sampleSize) {
+    const theme = this.themeManager?.getCurrent() || this.config.themes.dark;
+  }
+
+  /**
+   * Rendu de la distribution des notes
+   */
+  renderDistributionNotes(notes) {
+    const theme = this.themeManager?.getCurrent() || this.config.themes.dark;
+    const noteColors = this.config.noteColors[this.themeManager?.currentTheme || 'dark'];
+    const total = Object.values(notes).reduce((a, b) => a + b, 0);
+
+    const html = Object.entries(notes).map(([k, v], i) => `
+      <div class="note-bar">
+        <span class="note-lbl">Note ${k}</span>
+        <div class="note-track"><div class="note-fill" style="width:${(v / total * 100).toFixed(0)}%;background:${noteColors[i]}"></div></div>
+        <span class="note-pct">${(v / total * 100).toFixed(1)}%</span>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * Rendu de la distribution des statuts
+   */
+  renderDistributionStatuts(statuts) {
+    const total = Object.values(statuts).reduce((a, b) => a + b, 0);
+
+    const html = Object.entries(statuts).map(([k, v]) => `
+      <div class="stat-row">
+        <span class="stat-k">${k}</span>
+        <span class="stat-v">${(v / total * 100).toFixed(1)}%</span>
+      </div>
+    `).join('');
+  }
+
+  /**
    * Rendu de la matrice de Pearson
    */
   renderPearsonMatrix(pearson) {
@@ -97,44 +150,40 @@ class DashboardRenderer {
         mHtml += `<div class="mx-cell" style="background:${corrBg(val)};color:${corrColor(val)}">${val.toFixed(4)}</div>`;
       });
     });
-
-    document.getElementById('mPearson').innerHTML = mHtml;
   }
 
-//   /**
-//    * Rendu de Spearman
-//    */
-//   renderSpearman(spearman) {
-//     const theme = this.themeManager?.getCurrent() || this.config.themes.dark;
-//     const colors = theme.colors;
+  /**
+   * Rendu de Spearman
+   */
+  renderSpearman(spearman) {
+    const theme = this.themeManager?.getCurrent() || this.config.themes.dark;
+    const colors = theme.colors;
 
-//     const spItems = [
-//       { label: 'Prix ↔ Note client', data: spearman.prix_note },
-//       { label: 'Quantité ↔ Note client', data: spearman.qte_note },
-//     ];
+    const spItems = [
+      { label: 'Prix ↔ Note client', data: spearman.prix_note },
+      { label: 'Quantité ↔ Note client', data: spearman.qte_note },
+    ];
 
-//     const html = spItems.map(item => {
-//       const sig = item.data.significatif;
-//       const col = item.data.corr > 0 ? colors.c1 : item.data.corr < 0 ? colors.c2 : colors.muted;
-//       const interp = Math.abs(item.data.corr) < 0.1
-//         ? '→ Corrélation très faible — variables indépendantes'
-//         : item.data.corr > 0 ? '→ Corrélation positive' : '→ Corrélation négative';
+    const html = spItems.map(item => {
+      const sig = item.data.significatif;
+      const col = item.data.corr > 0 ? colors.c1 : item.data.corr < 0 ? colors.c2 : colors.muted;
+      const interp = Math.abs(item.data.corr) < 0.1
+        ? '→ Corrélation très faible — variables indépendantes'
+        : item.data.corr > 0 ? '→ Corrélation positive' : '→ Corrélation négative';
 
-//       return `<div class="sp-item">
-//         <div class="sp-row">
-//           <span class="sp-name">${item.label}</span>
-//           <span class="badge ${sig ? 'sig' : 'nsig'}">${sig ? 'SIGNIFICATIF' : 'NON SIG.'}</span>
-//         </div>
-//         <div class="sp-row">
-//           <span class="sp-val" style="color:${col}">ρ = ${item.data.corr.toFixed(4)}</span>
-//           <span class="sp-p">p = ${item.data.p_value.toFixed(4)}</span>
-//         </div>
-//         <div class="sp-interp">${interp}</div>
-//       </div>`;
-//     }).join('');
-
-//     document.getElementById('mSpearman').innerHTML = html;
-//   }
+      return `<div class="sp-item">
+        <div class="sp-row">
+          <span class="sp-name">${item.label}</span>
+          <span class="badge ${sig ? 'sig' : 'nsig'}">${sig ? 'SIGNIFICATIF' : 'NON SIG.'}</span>
+        </div>
+        <div class="sp-row">
+          <span class="sp-val" style="color:${col}">ρ = ${item.data.corr.toFixed(4)}</span>
+          <span class="sp-p">p = ${item.data.p_value.toFixed(4)}</span>
+        </div>
+        <div class="sp-interp">${interp}</div>
+      </div>`;
+    }).join('');
+  }
 
   /**
    * Utilitaire: convertir hex en RGB
