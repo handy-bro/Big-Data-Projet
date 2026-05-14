@@ -1,0 +1,33 @@
+{
+  "benchmark": {
+    "total_transactions": {
+      "hive_avg_s": 1056.661,
+      "redis_hit_ms": 0.57,
+      "speedup": 1860230
+    },
+    "ca_par_categorie": {
+      "hive_avg_s": 1120.398,
+      "redis_hit_ms": 0.56,
+      "speedup": 2000385
+    },
+    "top_pays": {
+      "hive_avg_s": 208.631,
+      "redis_hit_ms": 3.22,
+      "speedup": 64806
+    },
+    "taux_statut": {
+      "hive_avg_s": 248.627,
+      "redis_hit_ms": 0.53,
+      "speedup": 464850.0
+    }
+  },
+  "taux_statut_detail": {
+    "runs": [
+      261.9693349979998,
+      236.29466584500005,
+      247.61700187299994
+    ],
+    "hive_std_s": 12.867,
+    "redis_miss_s": 228.091
+  }
+}

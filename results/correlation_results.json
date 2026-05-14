@@ -1,0 +1,62 @@
+{
+  "echantillon_taille": 50000,
+  "qualite": {
+    "nulls": {
+      "prix": 0,
+      "qte": 0,
+      "note": 0,
+      "statut": 0,
+      "categorie": 0,
+      "pays": 0
+    },
+    "outliers_prix": 0,
+    "outliers_qte": 0,
+    "prix_min": 1.01,
+    "prix_max": 1999.83,
+    "prix_moyen": 1001.42,
+    "prix_std": 575.26
+  },
+  "pearson": {
+    "prix": {
+      "prix": 1.0,
+      "qte": 0.0019,
+      "note": -0.0041
+    },
+    "qte": {
+      "prix": 0.0019,
+      "qte": 1.0,
+      "note": 0.0074
+    },
+    "note": {
+      "prix": -0.0041,
+      "qte": 0.0074,
+      "note": 1.0
+    }
+  },
+  "spearman": {
+    "prix_note": {
+      "corr": -0.0041,
+      "p_value": 0.362618,
+      "significatif": 0
+    },
+    "qte_note": {
+      "corr": 0.0074,
+      "p_value": 0.099117,
+      "significatif": 0
+    }
+  },
+  "distribution_notes": {
+    "1": 9941,
+    "2": 9997,
+    "3": 10043,
+    "4": 9906,
+    "5": 10113
+  },
+  "distribution_statuts": {
+    "livre": 10102,
+    "confirme": 10010,
+    "annule": 10009,
+    "en_attente": 9971,
+    "rembourse": 9908
+  }
+}

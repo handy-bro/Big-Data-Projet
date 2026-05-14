@@ -75,4 +75,9 @@
     <name>hive.execution.engine</name>
     <value>mr</value>
   </property>
+
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>NOSASL</value>
+</property>
 </configuration>

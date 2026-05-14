@@ -1,6 +1,9 @@
 networks:
   hadoop-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
 services:
 
@@ -16,10 +19,12 @@ services:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
       - HDFS_CONF_dfs_replication=1
       - HDFS_CONF_dfs_permissions_enabled=false
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false
     volumes:
       - namenode_data:/hadoop/dfs/name
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.2
     restart: unless-stopped
 
   datanode:
@@ -36,7 +41,8 @@ services:
     volumes:
       - datanode_data:/hadoop/dfs/data
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.3
     restart: unless-stopped
 
   resourcemanager:
@@ -49,7 +55,8 @@ services:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
       - SERVICE_PRECONDITION=namenode:9870 datanode1:9864
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.4
     restart: unless-stopped
 
   nodemanager:
@@ -60,7 +67,8 @@ services:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
       - SERVICE_PRECONDITION=namenode:9870 datanode1:9864 resourcemanager:8088
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.5
     restart: unless-stopped
 
   hive-metastore-db:
@@ -74,7 +82,8 @@ services:
     volumes:
       - hive_metastore_db_data:/var/lib/postgresql/data
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.6
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hive -d metastore"]
@@ -102,13 +111,17 @@ services:
           /opt/hive/bin/schematool -dbType postgres -initSchema
         fi
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.7
     restart: "no"
 
   hive-metastore:
     image: bde2020/hive:2.3.2-postgresql-metastore
     container_name: hive-metastore
     hostname: hive-metastore
+    extra_hosts:
+      - "namenode:172.20.0.2"
+      - "datanode1:172.20.0.3"
     depends_on:
       hive-metastore-db:
         condition: service_healthy
@@ -124,13 +137,17 @@ services:
       - SERVICE_PRECONDITION=namenode:9870 datanode1:9864 hive-metastore-db:5432
     command: /opt/hive/bin/hive --service metastore
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.8
     restart: unless-stopped
 
   hiveserver:
     image: bde2020/hive:2.3.2-postgresql-metastore
     container_name: hiveserver
     hostname: hiveserver
+    extra_hosts:
+      - "namenode:172.20.0.2"
+      - "datanode1:172.20.0.3"
     depends_on:
       hive-metastore:
         condition: service_started
@@ -142,7 +159,8 @@ services:
     environment:
       - SERVICE_PRECONDITION=hive-metastore:9083
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.9
     restart: unless-stopped
 
   redis-master:
@@ -160,7 +178,8 @@ services:
     volumes:
       - redis_master_data:/data
     networks:
-      - hadoop-net
+      hadoop-net:
+        ipv4_address: 172.20.0.10
     restart: unless-stopped
 
 volumes:

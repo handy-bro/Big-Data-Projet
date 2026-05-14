@@ -7,10 +7,10 @@ services:
 
   datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode-${MACHINE_ID}
-    hostname: datanode-${MACHINE_ID}
+    container_name: datanode-3
+    hostname: datanode-3
     ports:
-      - "986${MACHINE_ID}:9864"
+      - "9863:9864"
     environment:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
       - HDFS_CONF_dfs_replication=1
@@ -22,8 +22,8 @@ services:
 
   nodemanager:
     image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
-    container_name: nodemanager-${MACHINE_ID}
-    hostname: nodemanager-${MACHINE_ID}
+    container_name: nodemanager-3
+    hostname: nodemanager-3
     depends_on:
       - datanode
     environment:
@@ -34,10 +34,10 @@ services:
 
   redis-replica:
     image: redis:7-alpine
-    container_name: redis-replica-${MACHINE_ID}
-    hostname: redis-replica-${MACHINE_ID}
+    container_name: redis-replica-3
+    hostname: redis-replica-3
     ports:
-      - "638${MACHINE_ID}:6379"
+      - "6383:6379"
     command: >
       redis-server
       --replicaof redis-master 6379
